@@ -4,7 +4,7 @@ import telegram
 from telegram import Update, InlineQueryResultArticle, InputTextMessageContent
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters, CallbackContext
 import openai
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("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")
 
 # Enable logging
 logging.basicConfig(
@@ -61,7 +61,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater(os.getenv("TELEGRAM_TOKEN"))
+    updater = Updater(os.getenv("6258580641:AAFZU7_J_J2SR2govL-8EPEVKjt45gNmwdc"))
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
