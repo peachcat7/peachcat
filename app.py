@@ -1,45 +1,28 @@
-import os
 import logging
+import os
 import telegram
-from telegram import Update, InlineQueryResultArticle, InputTextMessageContent
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, InlineQueryHandler
 import openai
-openai.api_key = os.getenv("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")
 
 # Enable logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+
 logger = logging.getLogger(__name__)
 
-def start(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /start is issued."""
-    user = update.effective_user
-    update.message.reply_markdown_v2(
-        fr'Hi {user.mention_markdown_v2()}\!',
-        reply_markup=telegram.ReplyKeyboardRemove(),
-    )
+# Define the Telegram token and OpenAI API key
+TELEGRAM_TOKEN = "6258580641:AAFZU7_J_J2SR2govL-8EPEVKjt45gNmwdc"
+OPENAI_API_KEY = "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"
 
-def help_command(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
+# Set up the Telegram bot
+bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
-def echo(update: Update, context: CallbackContext) -> None:
-    """Echo the user message."""
-    query = update.inline_query.query
-    if not query:
-        return
-    results = [
-        InlineQueryResultArticle(
-            id="query",
-            title="Query",
-            input_message_content=InputTextMessageContent(query),
-        ),
-    ]
-    update.inline_query.answer(results)
+# Set up the OpenAI API client
+openai.api_key = OPENAI_API_KEY
 
+# Define the inline query handler function
 def inlinequery(update: Update, context: CallbackContext) -> None:
-    """Handle the inline query."""
     query = update.inline_query.query
     if not query:
         return
@@ -47,40 +30,23 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
         engine="davinci",
         prompt=query,
         max_tokens=60,
+        n=1,
+        stop=None,
+        temperature=0.5,
     )
     message = response.choices[0].text.strip()
-    results = [
-        InlineQueryResultArticle(
-            id="query",
+    update.inline_query.answer(
+        results=[telegram.InlineQueryResultArticle(
+            id=query,
             title=message,
-            input_message_content=InputTextMessageContent(message),
-        ),
-    ]
-    update.inline_query.answer(results)
+            input_message_content=telegram.InputTextMessageContent(message),
+        )]
+    )
 
-def main() -> None:
-    """Start the bot."""
-    # Create the Updater and pass it your bot's token.
-    updater = Updater(os.getenv("6258580641:AAFZU7_J_J2SR2govL-8EPEVKjt45gNmwdc"))
+# Set up the inline query handler
+updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
+updater.dispatcher.add_handler(InlineQueryHandler(inlinequery))
 
-    # Get the dispatcher to register handlers
-    dispatcher = updater.dispatcher
-
-    # on different commands - answer in Telegram
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("help", help_command))
-
-    # on non command i.e message - echo the message on Telegram
-    dispatcher.add_handler(InlineQueryHandler(inlinequery))
-
-    # Start the Bot
-    updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
-    updater.idle()
-
-
-if __name__ == '__main__':
-    main()
+# Start the bot
+updater.start_polling()
+updater.idle()
