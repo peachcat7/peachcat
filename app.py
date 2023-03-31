@@ -47,6 +47,11 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
 updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
 updater.dispatcher.add_handler(InlineQueryHandler(inlinequery))
 
+# Set up the webhook
+PORT = int(os.environ.get("PORT", "8443"))
+HEROKU_APP_NAME = "peachcat"
+updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TELEGRAM_TOKEN)
+updater.bot.set_webhook("https://{}.herokuapp.com/{}".format(HEROKU_APP_NAME, TELEGRAM_TOKEN))
+
 # Start the bot
-updater.start_polling()
 updater.idle()
